@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Physiotherapy Session Receipts</title>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body {
+    background: #eee;
+    font-family: "Times New Roman", serif;
+  }
+
+  .actions {
+    text-align: center;
+    margin: 20px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .page {
+    width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 10px;
+    page-break-after: always;
+  }
+
+  .receipt {
+    background: #fff;
+    border: 2px solid #000;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .receipt:last-child {
+    margin-bottom: 0;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #000;
+    padding-bottom: 6px;
+  }
+
+  .header h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .header p {
+    margin: 2px 0;
+    font-size: 12px;
+  }
+
+  .title {
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #000;
+    padding: 3px 12px;
+    width: fit-content;
+    margin: 8px auto;
+    font-size: 14px;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .content p {
+    font-size: 14px;
+    margin: 8px 0;
+  }
+
+  .amount-box {
+    border: 2px solid #000;
+    width: 180px;
+    padding: 6px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 25px;
+    align-items: flex-end;
+  }
+
+  .signature-line {
+    text-align: right;
+    padding-top: 30px;
+    border-top: 1px solid #000;
+    width: 200px;
+    font-size: 12px;
+  }
+
+  @media print {
+    .actions {
+      display: none;
+    }
+    body {
+      background: #fff;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="actions">
+  <button onclick="downloadPDF()">Download PDF (24 Pages - 2 Receipts per Page)</button>
+</div>
+
+<div id="allReceipts"></div>
+
+<script>
+/* ================= CONFIG ================= */
+
+const patientName = "Mr. Aditya P. Dambal";
+const treatment = "Lt Shoulder Post Surgery Rehab";
+const sessionCharge = 500;
+let receiptNo = 102;
+
+/* ================= SESSION DATES ================= */
+
+const sessionDates = [
+  "05/12/2025","06/12/2025","08/12/2025","09/12/2025","10/12/2025",
+  "11/12/2025","12/12/2025","13/12/2025","15/12/2025","16/12/2025",
+  "17/12/2025","18/12/2025","19/12/2025","20/12/2025","22/12/2025",
+  "23/12/2025","24/12/2025","25/12/2025","26/12/2025","27/12/2025",
+  "29/12/2025","30/12/2025","31/12/2025",
+  "01/01/2026","02/01/2026","03/01/2026","05/01/2026","06/01/2026",
+  "07/01/2026","08/01/2026","09/01/2026","10/01/2026","12/01/2026",
+  "13/01/2026","14/01/2026","15/01/2026","16/01/2026","17/01/2026",
+  "19/01/2026","20/01/2026","21/01/2026","22/01/2026","23/01/2026",
+  "24/01/2026","26/01/2026","27/01/2026","28/01/2026","30/01/2026"
+];
+
+/* ================= RENDER RECEIPTS (2 PER PAGE) ================= */
+
+const container = document.getElementById("allReceipts");
+
+function createReceipt(date, number) {
+  return `
+    <div class="receipt">
+      <div class="header">
+        <div>
+          <h3>Dr. Gunesh P. Bhati</h3>
+          <p>B.P.Th (Physiotherapist)</p>
+        </div>
+        <div>
+          <h3>Dr. Lokhande's Skin & Orthopaedic Clinic</h3>
+          <p>Sinhgad Road, Pune - 411051</p>
+        </div>
+      </div>
+
+      <div class="title">CASH MEMO / RECEIPT</div>
+
+      <div class="meta">
+        <div>No: <strong>${number}</strong></div>
+        <div>Date: <strong>${date}</strong></div>
+      </div>
+
+      <div class="content">
+        <p>Received with thanks from <strong>${patientName}</strong></p>
+        <p>the sum of Rs. <strong>Five Hundred only</strong> by Cash / Cheque</p>
+        <p>on account of <strong>${treatment}</strong></p>
+      </div>
+
+      <div class="amount-box">Rs. ${sessionCharge}/-</div>
+
+      <div class="footer">
+        <div>* Cheque subject to realization</div>
+        <div class="signature-line">
+          Authorised Signature
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Group receipts 2 per page
+for (let i = 0; i < sessionDates.length; i += 2) {
+  let pageHTML = '<div class="page">';
+  
+  // First receipt on page
+  pageHTML += createReceipt(sessionDates[i], receiptNo);
+  receiptNo++;
+  
+  // Second receipt on page (if exists)
+  if (i + 1 < sessionDates.length) {
+    pageHTML += createReceipt(sessionDates[i + 1], receiptNo);
+    receiptNo++;
+  }
+  
+  pageHTML += '</div>';
+  container.innerHTML += pageHTML;
+}
+
+/* ================= PDF DOWNLOAD ================= */
+
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pages = document.querySelectorAll(".page");
+
+  for (let i = 0; i < pages.length; i++) {
+    const canvas = await html2canvas(pages[i], {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    if (i > 0) pdf.addPage();
+    pdf.addImage(imgData, "PNG", 5, 5, 200, 287);
+  }
+
+  pdf.save("Physiotherapy_Session_Receipts_No_Stamp.pdf");
+}
+</script>
+
+</body>
+</html>
